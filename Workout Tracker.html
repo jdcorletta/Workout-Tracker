@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5-Day Strength &amp; Fat Loss Tracker</title>
+<style>
+  :root {
+    --bg: #14171C;
+    --surface: #1E2228;
+    --surface-2: #262B33;
+    --border: #353B45;
+    --text: #ECEEF1;
+    --text-dim: #9AA1AD;
+    --text-faint: #5E6470;
+    --accent: #7F77DD;
+    --accent-dark: #26215C;
+    --done: #5DCAA5;
+    --done-dark: #04342C;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 4rem;
+  }
+
+  header {
+    padding: 1rem 0 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 0 0 0.5rem;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 0.35rem;
+    letter-spacing: -0.01em;
+  }
+
+  .sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  .week-strip {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.5rem;
+  }
+
+  .day-pill {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-family: var(--font-mono);
+  }
+
+  .day-pill .num {
+    display: block;
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+
+  .day-pill .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .day-pill.complete .dot {
+    background: var(--done);
+  }
+
+  .day-pill.active {
+    border-color: var(--accent);
+    background: var(--accent-dark);
+  }
+
+  .day-pill.active .num {
+    color: var(--accent);
+  }
+
+  .day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+  }
+
+  .day-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+  }
+
+  .day-card h2 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 0.25rem;
+  }
+
+  .day-card .focus {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  .progress-badge {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 6px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .exercise-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .exercise {
+    border-radius: 10px;
+    background: var(--surface-2);
+    border: 1px solid transparent;
+    overflow: hidden;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .exercise:hover {
+    border-color: var(--border);
+  }
+
+  .exercise.checked {
+    background: var(--done-dark);
+  }
+
+  .exercise-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--text-faint);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .exercise.checked .checkbox {
+    background: var(--done);
+    border-color: var(--done);
+  }
+
+  .checkbox svg.check {
+    width: 12px;
+    height: 12px;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  .exercise.checked .checkbox svg.check {
+    opacity: 1;
+  }
+
+  .exercise-text {
+    font-size: 14.5px;
+    line-height: 1.4;
+    color: var(--text);
+    transition: color 0.15s;
+    flex: 1;
+  }
+
+  .exercise.checked .exercise-text {
+    color: var(--text-dim);
+    text-decoration: line-through;
+  }
+
+  .expand-toggle {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+  }
+
+  .expand-toggle:hover {
+    background: var(--border);
+    color: var(--text);
+  }
+
+  .expand-toggle.open {
+    transform: rotate(180deg);
+  }
+
+  .expand-toggle svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .exercise-detail {
+    display: none;
+    padding: 0 14px 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .exercise-detail.open {
+    display: block;
+  }
+
+  .detail-inner {
+    display: flex;
+    gap: 14px;
+    padding-top: 12px;
+    align-items: flex-start;
+  }
+
+  .detail-icon {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .detail-icon svg {
+    width: 44px;
+    height: 44px;
+    stroke: var(--text-dim);
+  }
+
+  .detail-text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-dim);
+  }
+
+  .detail-text strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 1.5rem;
+  }
+
+  button.action-btn {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    flex: 1;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  button.action-btn:hover {
+    border-color: var(--text-faint);
+    color: var(--text);
+  }
+
+  footer {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+  }
+
+  @media (max-width: 420px) {
+    .day-pill .num { font-size: 10px; }
+    h1 { font-size: 24px; }
+    .detail-inner { flex-direction: column; }
+    .detail-icon { width: 56px; height: 56px; }
+    .detail-icon svg { width: 38px; height: 38px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Strength &amp; fat loss / 5-day split</p>
+  <h1>Weekly tracker</h1>
+  <p class="sub">Tap a day to view it. Check off each exercise as you complete it, or expand for form cues.</p>
+</header>
+
+<div class="week-strip" id="week-strip"></div>
+
+<div class="day-card">
+  <div class="day-card-head">
+    <div>
+      <h2 id="day-title"></h2>
+      <p class="focus" id="day-focus"></p>
+    </div>
+    <div class="progress-badge" id="progress-badge"></div>
+  </div>
+  <div class="exercise-list" id="exercise-list"></div>
+  <div class="actions">
+    <button class="action-btn" id="reset-day">Reset this day</button>
+    <button class="action-btn" id="reset-week">Reset week</button>
+  </div>
+</div>
+
+<footer>Progress saves automatically on this device</footer>
+
+<script>
+// ---- Icon library (simple line-art, generic movement shapes) ----
+const ICONS = {
+  press: '<path d="M6 12h12M9 8l-3 4 3 4M15 8l3 4-3 4" /><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>',
+  pull: '<path d="M4 8h6M4 16h6M10 8l4 4-4 4" /><circle cx="17" cy="12" r="2.5" />',
+  hinge: '<path d="M12 3v6M9 9h6M7 13l5-4 5 4M9 21l3-8 3 8" />',
+  squat: '<path d="M8 3h8M9 7h6M7 11l5 3 5-3M8 14l4 2 4-2M9 21l3-5 3 5" />',
+  raise: '<circle cx="12" cy="5" r="2"/><path d="M12 7v8M8 9l4-2 4 2M9 21l3-6 3 6" />',
+  curl: '<path d="M7 4v8M17 4v8M7 12l2.5 4M17 12l-2.5 4M9.5 16h5" />',
+  core: '<path d="M4 16h16M4 16l4-7M20 16l-4-7M10 9h4" />',
+  cardio: '<path d="M3 13h4l2-5 3 9 2-6 2 2h5" />',
+  lunge: '<path d="M8 3h8M9 7h6M6 13l6-2 5 4M8 21l4-5M16 21l1-4" />',
+  fly: '<circle cx="12" cy="6" r="2"/><path d="M12 8v6M4 10l8-2 8 2M9 21l3-7 3 7" />'
+};
+
+function icon(name) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg>';
+}
+
+// ---- Program data ----
+const PROGRAM = [
+  {
+    key: "push", label: "Mon", name: "Push", focus: "Chest, shoulders, triceps",
+    exercises: [
+      { text: "Barbell bench press \u2014 4 x 5-6", icon: "press", cue: "Lie flat, grip just outside shoulder width. Lower the bar to mid-chest with elbows at about 45 degrees, then press up to full lock-out." },
+      { text: "Incline dumbbell press \u2014 3 x 8-10", icon: "press", cue: "Set bench to 30-45 degrees. Press dumbbells up and slightly inward, keeping a slight arch in your lower back." },
+      { text: "Seated dumbbell shoulder press \u2014 3 x 8-10", icon: "press", cue: "Start with dumbbells at ear height, press straight overhead without flaring elbows too far back." },
+      { text: "Cable lateral raises \u2014 3 x 12-15", icon: "raise", cue: "Raise the arm out to the side until roughly shoulder height, leading with the elbow, controlled on the way down." },
+      { text: "Tricep rope pushdowns \u2014 3 x 12-15", icon: "press", cue: "Keep elbows pinned to your sides, extend the rope down and slightly apart at the bottom." },
+      { text: "Overhead tricep extension \u2014 2 x 12-15", icon: "press", cue: "Hold a dumbbell or rope overhead, lower behind your head by bending the elbows, then extend back up." },
+      { text: "Finisher: 10 min incline walk or bike", icon: "cardio", cue: "Moderate, sustainable pace. Should be able to hold a conversation." }
+    ]
+  },
+  {
+    key: "pull", label: "Tue", name: "Pull", focus: "Back, biceps",
+    exercises: [
+      { text: "Deadlift \u2014 4 x 5", icon: "hinge", cue: "Hinge at the hips with a flat back, bar close to shins. Drive through the floor, keeping the bar close to your body as you stand." },
+      { text: "Lat pulldown or pull-ups \u2014 3 x 8-10", icon: "pull", cue: "Pull the bar (or yourself) down/up while driving elbows toward your hips, squeeze shoulder blades together at the bottom." },
+      { text: "Seated cable row \u2014 3 x 10-12", icon: "pull", cue: "Sit tall, pull the handle to your stomach while keeping your chest up, squeeze the shoulder blades at the end." },
+      { text: "Single-arm dumbbell row \u2014 3 x 10-12 per side", icon: "pull", cue: "Support yourself on a bench, pull the dumbbell toward your hip keeping the elbow close to your body." },
+      { text: "Face pulls \u2014 3 x 15", icon: "pull", cue: "Pull the rope toward your face, separating hands at the end, focus on squeezing the rear shoulders." },
+      { text: "Barbell or dumbbell bicep curls \u2014 3 x 12-15", icon: "curl", cue: "Keep elbows tucked at your sides, curl up without swinging, control the lowering portion." },
+      { text: "Finisher: 10 min incline walk or bike", icon: "cardio", cue: "Moderate, sustainable pace. Should be able to hold a conversation." }
+    ]
+  },
+  {
+    key: "cardio_core", label: "Wed", name: "Cardio + core", focus: "Steady-state plus core work",
+    exercises: [
+      { text: "Steady-state cardio \u2014 30-35 min, moderate intensity", icon: "cardio", cue: "Run, bike, Peloton, or elliptical at a pace you could sustain for the full duration, roughly 65-75% effort." },
+      { text: "Hanging leg raises \u2014 3 x 12-15", icon: "core", cue: "Hang from a bar, raise legs to roughly hip height (or higher) without swinging, lower with control." },
+      { text: "Cable woodchoppers \u2014 3 x 12 per side", icon: "core", cue: "Rotate through your torso, pulling the cable diagonally from high to low (or low to high), keeping arms relatively straight." },
+      { text: "Plank \u2014 3 x 45-60 sec hold", icon: "core", cue: "Forearms down, body in a straight line from head to heels, brace your core and glutes." },
+      { text: "Russian twists \u2014 3 x 20 total reps", icon: "core", cue: "Lean back slightly, rotate your torso side to side, optionally holding a weight or medicine ball." }
+    ]
+  },
+  {
+    key: "legs", label: "Thu", name: "Legs", focus: "Quads, hamstrings, glutes",
+    exercises: [
+      { text: "Barbell back squat \u2014 4 x 5-6", icon: "squat", cue: "Bar on your upper traps, sit back and down keeping knees tracking over toes, drive up through your heels." },
+      { text: "Romanian deadlift \u2014 3 x 8-10", icon: "hinge", cue: "Soft knees, hinge at the hips and lower the bar along your legs until you feel a hamstring stretch, then return to standing." },
+      { text: "Leg press \u2014 3 x 10-12", icon: "squat", cue: "Feet shoulder-width on the platform, lower until knees are near 90 degrees, press through your full foot." },
+      { text: "Walking lunges \u2014 3 x 10-12 per leg", icon: "lunge", cue: "Step forward into a lunge, lower the back knee toward the floor, then drive up into the next step." },
+      { text: "Leg curl machine \u2014 3 x 12-15", icon: "curl", cue: "Curl your heels toward your glutes, focus on a slow, controlled return." },
+      { text: "Standing calf raises \u2014 3 x 15-20", icon: "raise", cue: "Rise onto your toes as high as possible, pause briefly, then lower slowly past neutral if possible." },
+      { text: "Finisher: 10 min incline walk", icon: "cardio", cue: "Set a moderate incline, walk at a pace that elevates your heart rate without straining your legs further." }
+    ]
+  },
+  {
+    key: "intervals_upper", label: "Fri", name: "Intervals + upper", focus: "Cardio intervals plus accessory lifts",
+    exercises: [
+      { text: "Interval cardio \u2014 20 min (1 min hard / 1 min easy)", icon: "cardio", cue: "Alternate near-max effort for 1 minute with an easy recovery pace for 1 minute, repeat for the full 20 minutes." },
+      { text: "Dumbbell shoulder press or Arnold press \u2014 3 x 10-12", icon: "press", cue: "Press overhead with control. For Arnold press, rotate palms from facing you to facing forward as you press." },
+      { text: "Cable or dumbbell flyes \u2014 3 x 12-15", icon: "fly", cue: "With a slight bend in the elbows, bring your arms together in a wide arc, focusing on the chest squeeze." },
+      { text: "Lat pulldown, lighter/higher rep \u2014 3 x 15", icon: "pull", cue: "Same form as your main pulldown sets, but lighter weight with a focus on controlled tempo." },
+      { text: "Bicep + tricep superset \u2014 3 x 12-15 each", icon: "curl", cue: "Go straight from a curl variation into a tricep extension/pushdown variation with no rest in between." },
+      { text: "Core finisher \u2014 3 rounds planks / leg raises", icon: "core", cue: "Alternate a plank hold with a set of leg raises, minimal rest between." }
+    ]
+  }
+];
+
+const STORAGE_KEY = "workout-tracker-state-v2";
+let state = {};
+let activeIndex = 0;
+
+function loadState() {
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  } catch (e) {}
+
+  state = {};
+  PROGRAM.forEach(day => {
+    const len = day.exercises.length;
+    if (saved && saved[day.key] && saved[day.key].checked && saved[day.key].checked.length === len) {
+      state[day.key] = saved[day.key];
+    } else {
+      state[day.key] = { checked: new Array(len).fill(false), open: new Array(len).fill(false) };
+    }
+  });
+
+  if (saved && typeof saved.activeIndex === "number") {
+    activeIndex = saved.activeIndex;
+  }
+}
+
+function saveState() {
+  try {
+    const payload = Object.assign({}, state, { activeIndex });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch (e) {}
+}
+
+const checkSvg = '<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+const chevronSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+function renderWeekStrip() {
+  const strip = document.getElementById('week-strip');
+  strip.innerHTML = '';
+  PROGRAM.forEach((day, i) => {
+    const done = state[day.key].checked.filter(Boolean).length;
+    const complete = done === day.exercises.length;
+
+    const pill = document.createElement('div');
+    pill.className = 'day-pill' + (i === activeIndex ? ' active' : '') + (complete ? ' complete' : '');
+    pill.innerHTML = '<span class="num">' + day.label + '</span><span class="dot"></span>';
+    pill.onclick = () => { activeIndex = i; saveState(); render(); };
+    strip.appendChild(pill);
+  });
+}
+
+function renderDay() {
+  const day = PROGRAM[activeIndex];
+  document.getElementById('day-title').textContent = day.name;
+  document.getElementById('day-focus').textContent = day.focus;
+
+  const list = document.getElementById('exercise-list');
+  list.innerHTML = '';
+
+  day.exercises.forEach((ex, i) => {
+    const isChecked = state[day.key].checked[i];
+    const isOpen = state[day.key].open[i];
+
+    const wrap = document.createElement('div');
+    wrap.className = 'exercise' + (isChecked ? ' checked' : '');
+
+    const row = document.createElement('div');
+    row.className = 'exercise-row';
+
+    const cb = document.createElement('div');
+    cb.className = 'checkbox';
+    cb.innerHTML = checkSvg;
+    cb.onclick = (e) => {
+      e.stopPropagation();
+      state[day.key].checked[i] = !state[day.key].checked[i];
+      saveState();
+      render();
+    };
+
+    const text = document.createElement('div');
+    text.className = 'exercise-text';
+    text.textContent = ex.text;
+    text.onclick = (e) => {
+      e.stopPropagation();
+      state[day.key].checked[i] = !state[day.key].checked[i];
+      saveState();
+      render();
+    };
+
+    const toggle = document.createElement('button');
+    toggle.className = 'expand-toggle' + (isOpen ? ' open' : '');
+    toggle.setAttribute('aria-label', 'Show form cues');
+    toggle.innerHTML = chevronSvg;
+    toggle.onclick = (e) => {
+      e.stopPropagation();
+      state[day.key].open[i] = !state[day.key].open[i];
+      saveState();
+      render();
+    };
+
+    row.appendChild(cb);
+    row.appendChild(text);
+    row.appendChild(toggle);
+
+    const detail = document.createElement('div');
+    detail.className = 'exercise-detail' + (isOpen ? ' open' : '');
+    detail.innerHTML =
+      '<div class="detail-inner">' +
+        '<div class="detail-icon">' + icon(ex.icon) + '</div>' +
+        '<div class="detail-text">' + ex.cue + '</div>' +
+      '</div>';
+
+    wrap.appendChild(row);
+    wrap.appendChild(detail);
+    list.appendChild(wrap);
+  });
+
+  const done = state[day.key].checked.filter(Boolean).length;
+  document.getElementById('progress-badge').textContent = done + ' / ' + day.exercises.length;
+}
+
+function render() {
+  renderWeekStrip();
+  renderDay();
+}
+
+document.getElementById('reset-day').onclick = () => {
+  const day = PROGRAM[activeIndex];
+  const len = day.exercises.length;
+  state[day.key] = { checked: new Array(len).fill(false), open: state[day.key].open };
+  saveState();
+  render();
+};
+
+document.getElementById('reset-week').onclick = () => {
+  PROGRAM.forEach(day => {
+    const len = day.exercises.length;
+    state[day.key] = { checked: new Array(len).fill(false), open: state[day.key].open };
+  });
+  saveState();
+  render();
+};
+
+loadState();
+render();
+</script>
+
+</body>
+</html>
